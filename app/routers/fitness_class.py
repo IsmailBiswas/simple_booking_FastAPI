@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, HTTPException
 from typing import Annotated
+from pydantic import EmailStr
 from app.database import DBSessionDep
 from app.models import fitness_class
 from sqlmodel import select
@@ -22,12 +23,37 @@ async def write_fitnessclass(new_class: fitness_class.FitnessClassCreate , sessi
     session.refresh(db_fitness_class)
     return db_fitness_class
 
+
 # get all booking by an email
-@router.get("/booking/", tags=["booking"])
-async def read_booking():
-    return [{"username": "Rick"}, {"username": "Morty"}]
+@router.get("/booking/", tags=["booking"], response_model=list[fitness_class.BookingPublic])
+async def read_booking(client_email: EmailStr,
+  session: DBSessionDep,
+  offset: int = 0,
+  limit: Annotated[int, Query(le=100)] = 100):
+    db_booking = session.exec(
+      select(fitness_class.Booking).where(fitness_class.Booking.client_email == client_email).offset(offset).limit(limit)
+    ).all()
+    return db_booking
 
 # book a class
-@router.post("/book/", tags=["book"])
-async def write_book():
-    return [{"username": "Rick"}, {"username": "Morty"}]
+@router.post("/book/", tags=["book"], response_model=fitness_class.BookingPublic)
+async def write_book(book: fitness_class.BookingCreate, session: DBSessionDep):
+  with session.begin():
+    db_booking = fitness_class.Booking.model_validate(book)
+    # Lock the row for update
+    req_class = session.exec(
+      select(fitness_class.FitnessClass).where(fitness_class.FitnessClass.id == db_booking.class_id)
+      .with_for_update()
+    ).first()
+
+    if not req_class:
+      raise HTTPException(status_code=404, detail="Class not found")
+
+    if req_class.booked_slot >= req_class.total_slot:
+      raise HTTPException(status_code=409, detail="No more slot is available")
+
+    req_class.booked_slot += 1
+    session.add(req_class)
+    session.add(db_booking)
+    session.commit()
+    return db_booking
