@@ -1,46 +1,12 @@
-from sqlmodel import Field, SQLModel
-from pydantic import EmailStr
+from sqlmodel import Field
 import datetime
-
-class FitnessClassBase(SQLModel):
-  name: str = Field(index=True)
-  class_time: datetime.datetime
-  instructor: str
+from app.schema.fitness_class import FitnessClassBase, BookingBase
 
 class FitnessClass(FitnessClassBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     total_slot: int
     booked_slot: int = 0
 
-class FitnessClassPublic(FitnessClassBase):
-  id: int
-  booked_slot: int
-  total_slot: int
-
-class FitnessClassCreate(FitnessClassBase):
-  total_slot: int
-
-class FitnessClassUpdate(FitnessClassBase):
-  name: str = Field(index=True)
-  class_time: datetime.datetime
-  instructor: str
-  booked_slot: int
-  total_slot: int
-
-class BookingBase(SQLModel):
-  client_name: str = Field(index=True)
-  client_email: EmailStr = Field(index=True)
-  class_id: int # TODO -> use slug
-
 class Booking(BookingBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
     booked_at: datetime.datetime = Field(default_factory=lambda: datetime.datetime.now(datetime.UTC))
-
-class BookingCreate(BookingBase):
-  ...
-
-class BookingPublic(BookingBase):
-  booked_at: datetime.datetime
-
-class BookingUpdate(BookingBase):
-  ...
