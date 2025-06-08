@@ -1,15 +1,21 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
 
 class Settings(BaseSettings):
     app_name: str = "Simple Booking API"
-
     database_url: str = "sqlite:///./database.db"
 
-    environment: str = "development"
+    env_file: str = ".env.dev"
+    if os.getenv("PRODUCTION"):
+        env_file = ".env"
+    elif os.getenv("TESTING"):
+        env_file = ".env.test"
 
-    class Config:
-        env_file = ".env"  # Load from .env file
-        case_sensitive = False
+    model_config = SettingsConfigDict(
+        env_file = env_file,
+        case_sensitive=False,
+    )
+
 
 # Create a global settings instance
 settings = Settings()

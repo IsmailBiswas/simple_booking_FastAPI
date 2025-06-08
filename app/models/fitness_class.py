@@ -15,6 +15,7 @@ class FitnessClass(FitnessClassBase, table=True):
 class FitnessClassPublic(FitnessClassBase):
   id: int
   booked_slot: int
+  total_slot: int
 
 class FitnessClassCreate(FitnessClassBase):
   total_slot: int

@@ -38,7 +38,7 @@ async def read_booking(client_email: EmailStr,
 # book a class
 @router.post("/book/", tags=["book"], response_model=fitness_class.BookingPublic)
 async def write_book(book: fitness_class.BookingCreate, session: DBSessionDep):
-  with session.begin():
+  with session.begin_nested():
     db_booking = fitness_class.Booking.model_validate(book)
     # Lock the row for update
     req_class = session.exec(
@@ -55,5 +55,4 @@ async def write_book(book: fitness_class.BookingCreate, session: DBSessionDep):
     req_class.booked_slot += 1
     session.add(req_class)
     session.add(db_booking)
-    session.commit()
     return db_booking
