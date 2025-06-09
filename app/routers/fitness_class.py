@@ -39,8 +39,8 @@ async def read_booking(client_email: EmailStr,
 # book a class
 @router.post("/book/", tags=["book"], response_model=fitness_class_schema.BookingPublic)
 async def write_book(book: fitness_class_schema.BookingCreate, session: DBSessionDep):
+  db_booking = fitness_class_model.Booking.model_validate(book)
   with session.begin_nested():
-    db_booking = fitness_class_model.Booking.model_validate(book)
     # Lock the row for update
     req_class = session.exec(
       select(fitness_class_model.FitnessClass).where(fitness_class_model.FitnessClass.id == db_booking.class_id)
@@ -56,4 +56,6 @@ async def write_book(book: fitness_class_schema.BookingCreate, session: DBSessio
     req_class.booked_slot += 1
     session.add(req_class)
     session.add(db_booking)
-    return db_booking
+
+  session.refresh(db_booking)
+  return db_booking

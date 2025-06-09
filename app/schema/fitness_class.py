@@ -15,13 +15,6 @@ class FitnessClassPublic(FitnessClassBase):
 class FitnessClassCreate(FitnessClassBase):
   total_slot: int
 
-class FitnessClassUpdate(FitnessClassBase):
-  name: str = Field(index=True)
-  class_time: datetime.datetime
-  instructor: str
-  booked_slot: int
-  total_slot: int
-
 class BookingBase(SQLModel):
   client_name: str = Field(index=True)
   client_email: EmailStr = Field(index=True)
@@ -32,6 +25,3 @@ class BookingCreate(BookingBase):
 
 class BookingPublic(BookingBase):
   booked_at: datetime.datetime
-
-class BookingUpdate(BookingBase):
-  ...
